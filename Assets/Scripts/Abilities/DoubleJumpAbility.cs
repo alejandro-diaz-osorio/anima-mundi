@@ -69,34 +69,34 @@ public class DoubleJumpAbility : MonoBehaviour
     }
     
     private void UpdateGroundedState()
+{
+    bool wasGrounded = isGrounded;
+    
+    if (ballController != null)
     {
-        bool wasGrounded = isGrounded;
+        isGrounded = ballController.IsGrounded();
+    }
+    else
+    {
+        Vector3 sphereCenter = transform.position - Vector3.up * (ballController.groundCheckDistance - ballController.groundCheckRadius);
+        isGrounded = Physics.CheckSphere(sphereCenter, ballController.groundCheckRadius, ballController.groundLayerMask);
+    }
+    
+    // Reset double jump when landing
+    if (!wasGrounded && isGrounded)
+    {
+        hasDoubleJump = true;
+        jumpCount = 0;
+        OnLanded?.Invoke();
         
-        // Use BallController's grounded state if available, otherwise do our own check
-        if (ballController != null)
-        {
-            isGrounded = ballController.IsGrounded();
-        }
-        else
-        {
-            // Fallback: do our own ground check using BallController's settings
-            Vector3 sphereCenter = transform.position - Vector3.up * (ballController.groundCheckDistance - ballController.groundCheckRadius);
-            isGrounded = Physics.CheckSphere(sphereCenter, ballController.groundCheckRadius, ballController.groundLayerMask);
-        }
+        AudioManager.PlayLandSound();
         
-        // Reset double jump when landing
-        if (!wasGrounded && isGrounded)
+        if (showDebugInfo)
         {
-            hasDoubleJump = true;
-            jumpCount = 0;
-            OnLanded?.Invoke();
-            
-            if (showDebugInfo)
-            {
-                Debug.Log("Landed - Double jump reset");
-            }
+            Debug.Log("Landed - Double jump reset");
         }
     }
+}
     
     private bool CanJump()
     {
@@ -114,18 +114,21 @@ public class DoubleJumpAbility : MonoBehaviour
         
         if (isGrounded)
         {
-            // First jump - use original jump force from BallController
+            // First jump
             if (ballController != null)
             {
                 jumpForceToApply = ballController.jumpForce;
             }
             else
             {
-                jumpForceToApply = 10f; // Fallback value
+                jumpForceToApply = 10f;
             }
             
             jumpCount = 1;
             OnFirstJump?.Invoke();
+            
+            // NUEVO: Sonido de salto
+            AudioManager.PlayJumpSound();
             
             if (showDebugInfo)
             {
@@ -134,7 +137,6 @@ public class DoubleJumpAbility : MonoBehaviour
         }
         else if (hasDoubleJump)
         {
-            // Second jump - use configured second jump force
             if (useMultiplier && ballController != null)
             {
                 jumpForceToApply = ballController.jumpForce * secondJumpForceMultiplier;
@@ -145,9 +147,11 @@ public class DoubleJumpAbility : MonoBehaviour
             }
             
             jumpCount = 2;
-            hasDoubleJump = false; // Consume double jump
+            hasDoubleJump = false;
             isSecondJump = true;
             OnSecondJump?.Invoke();
+            
+            AudioManager.PlayJumpSound();
             
             if (showDebugInfo)
             {
@@ -156,7 +160,7 @@ public class DoubleJumpAbility : MonoBehaviour
         }
         else
         {
-            return; // Should not reach here if CanJump() works correctly
+            return;
         }
         
         // Apply jump logic

@@ -91,43 +91,58 @@ public class PillarSystem : MonoBehaviour
             }
         }
     }
-    
+
     private void DestroyPillar(Vector3 impactPoint)
     {
         pillarDestroyed = true;
-        
+
         if (pillarMesh != null) pillarMesh.SetActive(false);
         if (destructionParticles != null)
         {
             destructionParticles.transform.position = impactPoint;
             destructionParticles.Play();
         }
-        
+
         PlaySound(destructionSound, impactPoint);
         if (cameraShake != null) cameraShake.Shake(shakeIntensity, shakeDuration);
         if (pillarCollider != null) pillarCollider.enabled = false;
-        
+
         if (timerController != null)
         {
             timerController.StartTimer(timeLimit);
             timerStarted = true;
         }
-        
+
+        // NUEVO: Disparar evento para activar el portal inmediatamente
         OnPillarDestroyed?.Invoke();
+
         Debug.Log("PILLAR DESTROYED! Return to start!");
     }
     
-    private void PlayerReturnedSuccessfully()
+    
+        private void PlayerReturnedSuccessfully()
     {
+        Debug.Log("=== PlayerReturnedSuccessfully called ===");
+        
         if (timerController != null)
         {
             float timeRemaining = timerController.GetTimeRemaining();
-            timerController.StopTimer();
-            
             MedalRank medal = CalculateMedal(timeRemaining);
-            Debug.Log($"Returned with {timeRemaining:F2}s! Medal: {medal}");
             
-            OnPlayerReturnedInTime?.Invoke(medal);
+            Debug.Log($"Time remaining: {timeRemaining:F2}s, Medal: {medal}");
+            
+            // CRÍTICO: Verificar si hay suscriptores
+            if (OnPlayerReturnedInTime != null)
+            {
+                Debug.Log($"Event has {OnPlayerReturnedInTime.GetInvocationList().Length} subscribers");
+                OnPlayerReturnedInTime.Invoke(medal);
+            }
+            else
+            {
+                Debug.LogError("OnPlayerReturnedInTime has NO subscribers!");
+            }
+            
+            timerController.StopTimer();
             timerStarted = false;
         }
     }
@@ -142,11 +157,13 @@ public class PillarSystem : MonoBehaviour
     
     private void ResetPlayerToPillar()
     {
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
+    GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
         {
+            // Reset position
             player.transform.position = transform.position + Vector3.up * 3f;
             
+            // Reset velocity
             Rigidbody rb = player.GetComponent<Rigidbody>();
             if (rb != null)
             {
@@ -154,9 +171,13 @@ public class PillarSystem : MonoBehaviour
                 rb.angularVelocity = Vector3.zero;
             }
             
+            // Reset abilities
             DoubleJumpAbility doubleJump = player.GetComponent<DoubleJumpAbility>();
             if (doubleJump != null) doubleJump.ResetDoubleJump();
         }
+        
+        // NUEVO: Restaurar el pilar automáticamente
+        ResetPillar();
     }
     
     private MedalRank CalculateMedal(float timeRemaining)
@@ -176,9 +197,33 @@ public class PillarSystem : MonoBehaviour
     {
         pillarDestroyed = false;
         timerStarted = false;
-        if (pillarMesh != null) pillarMesh.SetActive(true);
-        if (pillarCollider != null) pillarCollider.enabled = true;
-        if (timerController != null) timerController.ResetTimer();
+        
+        // Reactivar mesh
+        if (pillarMesh != null)
+        {
+            pillarMesh.SetActive(true);
+        }
+        
+        // Reactivar collider
+        if (pillarCollider != null)
+        {
+            pillarCollider.enabled = true;
+        }
+        
+        // Detener y resetear timer
+        if (timerController != null)
+        {
+            timerController.StopTimer();
+            timerController.ResetTimer();
+        }
+        
+        // Detener partículas si siguen activas
+        if (destructionParticles != null && destructionParticles.isPlaying)
+        {
+            destructionParticles.Stop();
+        }
+        
+        Debug.Log("Pillar reset - ready for another attempt");
     }
     
     void OnDrawGizmos()

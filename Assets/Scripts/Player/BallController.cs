@@ -33,6 +33,12 @@ public class BallController : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+
+        if (rb != null)
+        {
+            rb.interpolation = RigidbodyInterpolation.Interpolate;
+            rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+        }  
         
         // Auto-find references if not assigned
         if (cameraController == null)
@@ -123,36 +129,43 @@ public class BallController : MonoBehaviour
     }
     
     private void CheckGrounded()
-    {
-        wasGroundedLastFrame = isGrounded;
-        
-        Vector3 sphereCenter = transform.position - Vector3.up * (groundCheckDistance - groundCheckRadius);
-        Collider[] hits = Physics.OverlapSphere(sphereCenter, groundCheckRadius, groundLayerMask);
-        isGrounded = hits.Length > 0;
-        
-        if (isGrounded)
-        {
-            lastGroundedTime = Time.time;
-        }
-    }
+{
+    wasGroundedLastFrame = isGrounded;
     
-    private void TryJump()
+    Vector3 sphereCenter = transform.position - Vector3.up * (groundCheckDistance - groundCheckRadius);
+    Collider[] hits = Physics.OverlapSphere(sphereCenter, groundCheckRadius, groundLayerMask);
+    isGrounded = hits.Length > 0;
+    
+    if (isGrounded)
     {
-        if (Time.time - lastJumpTime < jumpCooldown)
-            return;
-            
-        bool canJump = isGrounded || (Time.time - lastGroundedTime < coyoteTime);
+        lastGroundedTime = Time.time;
         
-        if (canJump)
+        if (!wasGroundedLastFrame && rb.linearVelocity.y < -2f)
         {
-            Vector3 velocity = rb.linearVelocity;
-            velocity.y = 0;
-            rb.linearVelocity = velocity;
-            
-            rb.AddForce(new Vector3(0, jumpForce, 0), ForceMode.Impulse);
-            lastJumpTime = Time.time;
+            AudioManager.PlayLandSound();
         }
     }
+}
+
+private void TryJump()
+{
+    if (Time.time - lastJumpTime < jumpCooldown)
+        return;
+        
+    bool canJump = isGrounded || (Time.time - lastGroundedTime < coyoteTime);
+    
+    if (canJump)
+    {
+        Vector3 velocity = rb.linearVelocity;
+        velocity.y = 0;
+        rb.linearVelocity = velocity;
+        
+        rb.AddForce(new Vector3(0, jumpForce, 0), ForceMode.Impulse);
+        lastJumpTime = Time.time;
+        
+        AudioManager.PlayJumpSound();
+    }
+}
     
     // Public getters for abilities to access grounded state
     public bool IsGrounded()

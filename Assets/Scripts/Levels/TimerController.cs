@@ -123,13 +123,28 @@ public class TimerController : MonoBehaviour
         isRunning = true;
         hasExpired = false;
         
-        if (timerPanel != null) timerPanel.SetActive(true);
+        // CRÍTICO: Mostrar UI solo cuando inicia
+        if (timerPanel != null)
+        {
+            timerPanel.SetActive(true);
+        }
+        
+        // Asegurar que TimeUp esté oculto
+        if (timeUpText != null)
+        {
+            timeUpText.gameObject.SetActive(false);
+        }
     }
     
     public void StopTimer()
     {
         isRunning = false;
-        if (timerPanel != null) timerPanel.SetActive(false);
+        
+        // CRÍTICO: Ocultar UI cuando se detiene
+        if (timerPanel != null)
+        {
+            timerPanel.SetActive(false);
+        }
     }
     
     public void PauseTimer()
@@ -147,8 +162,17 @@ public class TimerController : MonoBehaviour
         currentTime = countDown ? timeLimit : 0;
         isRunning = false;
         hasExpired = false;
-        if (timerPanel != null) timerPanel.SetActive(false);
-        if (timeUpText != null) timeUpText.gameObject.SetActive(false);
+        
+        // CRÍTICO: Ocultar toda la UI
+        if (timerPanel != null)
+        {
+            timerPanel.SetActive(false);
+        }
+        
+        if (timeUpText != null)
+        {
+            timeUpText.gameObject.SetActive(false);
+        }
     }
     
     public float GetTimeRemaining()

@@ -1,3 +1,4 @@
+// Reemplazar CameraShake.cs con esta versión corregida:
 using UnityEngine;
 using System.Collections;
 
@@ -13,28 +14,37 @@ public class CameraShake : MonoBehaviour
     public float positionShakeMultiplier = 1f;
     public float rotationShakeMultiplier = 0.1f;
     
-    private Vector3 originalPosition;
-    private Quaternion originalRotation;
+    private Vector3 originalLocalPosition;
+    private Quaternion originalLocalRotation;
     private bool isShaking = false;
     private CameraMovement cameraMovement;
     
     void Start()
     {
-        originalPosition = transform.localPosition;
-        originalRotation = transform.localRotation;
+        // CRÍTICO: Usar localPosition, no position
+        originalLocalPosition = transform.localPosition;
+        originalLocalRotation = transform.localRotation;
         cameraMovement = GetComponent<CameraMovement>();
+        
+        if (cameraMovement == null)
+        {
+            Debug.LogWarning("CameraShake works best with CameraMovement component");
+        }
     }
     
     void LateUpdate()
     {
         if (!isShaking)
         {
-            // Smoothly return to original position
-            transform.localPosition = Vector3.Lerp(transform.localPosition, originalPosition, Time.deltaTime * 5f);
-            
-            if (!useRandomRotation)
+            // Smoothly return to zero offset (CameraMovement handles actual position)
+            if (cameraMovement == null)
             {
-                transform.localRotation = Quaternion.Lerp(transform.localRotation, originalRotation, Time.deltaTime * 5f);
+                transform.localPosition = Vector3.Lerp(transform.localPosition, originalLocalPosition, Time.deltaTime * 5f);
+                
+                if (!useRandomRotation)
+                {
+                    transform.localRotation = Quaternion.Lerp(transform.localRotation, originalLocalRotation, Time.deltaTime * 5f);
+                }
             }
         }
     }
@@ -56,13 +66,9 @@ public class CameraShake : MonoBehaviour
     {
         isShaking = true;
         
-        // Store original position if camera movement exists
-        bool hadCameraMovement = false;
-        if (cameraMovement != null)
-        {
-            hadCameraMovement = true;
-            originalPosition = transform.localPosition;
-        }
+        // Store current local position at start of shake
+        Vector3 startLocalPosition = transform.localPosition;
+        Quaternion startLocalRotation = transform.localRotation;
         
         float elapsed = 0f;
         
@@ -72,9 +78,19 @@ public class CameraShake : MonoBehaviour
             float percentComplete = elapsed / duration;
             float currentIntensity = intensity * intensityCurve.Evaluate(percentComplete);
             
-            // Position shake
+            // CRITICAL FIX: Add offset to current position, don't set absolute
             Vector3 randomOffset = Random.insideUnitSphere * currentIntensity * positionShakeMultiplier;
-            transform.localPosition = originalPosition + randomOffset;
+            
+            if (cameraMovement != null)
+            {
+                // With CameraMovement, just apply small local offset
+                transform.localPosition = randomOffset;
+            }
+            else
+            {
+                // Without CameraMovement, offset from start position
+                transform.localPosition = startLocalPosition + randomOffset;
+            }
             
             // Rotation shake
             if (useRandomRotation)
@@ -85,17 +101,18 @@ public class CameraShake : MonoBehaviour
                     Random.Range(-rotationIntensity, rotationIntensity),
                     Random.Range(-rotationIntensity, rotationIntensity)
                 );
-                transform.localRotation = originalRotation * Quaternion.Euler(randomRotation);
+                transform.localRotation = startLocalRotation * Quaternion.Euler(randomRotation);
             }
             
             yield return null;
         }
         
-        // Reset
-        transform.localPosition = originalPosition;
+        // Reset to zero offset
+        transform.localPosition = cameraMovement != null ? Vector3.zero : startLocalPosition;
+        
         if (useRandomRotation)
         {
-            transform.localRotation = originalRotation;
+            transform.localRotation = startLocalRotation;
         }
         
         isShaking = false;
@@ -104,8 +121,8 @@ public class CameraShake : MonoBehaviour
     public void StopShake()
     {
         StopAllCoroutines();
-        transform.localPosition = originalPosition;
-        transform.localRotation = originalRotation;
+        transform.localPosition = cameraMovement != null ? Vector3.zero : originalLocalPosition;
+        transform.localRotation = originalLocalRotation;
         isShaking = false;
     }
     
