@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 3780179198384456681}
   - component: {fileID: 6463836160889478037}
   - component: {fileID: 5471151299617747969}
+  - component: {fileID: 6151197176819159119}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -164,7 +165,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 256
   groundCheckDistance: 0.6
-  groundCheckRadius: 0.5
+  groundCheckRadius: 0.45
   jumpCooldown: 0.1
   coyoteTime: 0.1
   dashAbility: {fileID: 3780179198384456681}
@@ -231,8 +232,28 @@ MonoBehaviour:
   enablePurification: 1
   purificationRadiusMultiplier: 1
   purificationParticles: {fileID: 0}
-  showPurificationRadius: 1
+  showPurificationRadius: 0
   radiusColor: {r: 0, g: 1, b: 0, a: 0.3}
   purificationSound: {fileID: 0}
   soundVolume: 0.3
   soundCooldown: 0.5
+--- !u!114 &6151197176819159119
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6920435430196916009}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32a89e926c2a6284ab7ca3f5f83d6c8c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerParticles
+  jumpParticles: {fileID: 0}
+  jumpBurstAmount: 15
+  jumpParticleColor: {r: 1, g: 1, b: 1, a: 1}
+  landParticles: {fileID: 0}
+  landBurstAmount: 20
+  landParticleColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
+  minLandVelocity: -1
+  doubleJumpParticleColor: {r: 0, g: 1, b: 1, a: 1}

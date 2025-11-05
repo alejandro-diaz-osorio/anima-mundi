@@ -78,7 +78,7 @@ public class ExitPortal : MonoBehaviour
     {
         if (isActive && portalMesh != null)
         {
-            portalMesh.transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime);
+            portalMesh.transform.Rotate(Vector3.forward, rotationSpeed * Time.deltaTime);
         }
     }
     
@@ -86,7 +86,7 @@ public class ExitPortal : MonoBehaviour
     {
         Debug.Log("=== OnPillarDestroyed - Activating portal ===");
         SetPortalActive(true);
-        playerEntered = false; // Reset para permitir entrada
+        playerEntered = false;
     }
     
     private void SetPortalActive(bool active)

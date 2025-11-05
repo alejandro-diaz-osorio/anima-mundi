@@ -131,7 +131,6 @@ public class PillarSystem : MonoBehaviour
             
             Debug.Log($"Time remaining: {timeRemaining:F2}s, Medal: {medal}");
             
-            // CRÍTICO: Verificar si hay suscriptores
             if (OnPlayerReturnedInTime != null)
             {
                 Debug.Log($"Event has {OnPlayerReturnedInTime.GetInvocationList().Length} subscribers");
@@ -160,8 +159,7 @@ public class PillarSystem : MonoBehaviour
     GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
         {
-            // Reset position
-            player.transform.position = transform.position + Vector3.up * 3f;
+            player.transform.position = transform.position + transform.forward * 5f;
             
             // Reset velocity
             Rigidbody rb = player.GetComponent<Rigidbody>();
@@ -176,7 +174,6 @@ public class PillarSystem : MonoBehaviour
             if (doubleJump != null) doubleJump.ResetDoubleJump();
         }
         
-        // NUEVO: Restaurar el pilar automáticamente
         ResetPillar();
     }
     

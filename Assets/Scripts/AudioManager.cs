@@ -69,9 +69,9 @@ public class AudioManager : MonoBehaviour
         if (pillar != null)
         {
             pillar.OnPillarDestroyed += OnEscapeStart;
+            pillar.OnTimeExpired += PlayAmbientMusic;
         }
         
-        // Start ambient music
         PlayAmbientMusic();
     }
     
@@ -117,8 +117,9 @@ public class AudioManager : MonoBehaviour
     
     private void PlayAmbientMusic()
     {
-        if (ambientMusic != null && musicSource != null)
+        if (ambientMusic != null && musicSource != null && !isEscapeMode)
         {
+            musicSource.Stop();
             musicSource.clip = ambientMusic;
             musicSource.Play();
             isEscapeMode = false;
@@ -127,8 +128,9 @@ public class AudioManager : MonoBehaviour
     
     private void OnEscapeStart()
     {
-        if (escapeMusic != null && !isEscapeMode)
+        if (escapeMusic != null && !isEscapeMode && musicSource.isPlaying)
         {
+            musicSource.Stop();
             StartCoroutine(CrossfadeMusic(escapeMusic));
             isEscapeMode = true;
         }
